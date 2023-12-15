@@ -173,6 +173,22 @@ app.post('/save-data', async (req, res) => {
     }
 });
 
+// Маршрут для получения всех данных
+app.get('/get-data', async (req, res) => {
+    try {
+        await client.connect();
+        const collection = client.db("TestGlide").collection("your_collection_name");
+
+        const data = await collection.find({}).toArray();
+        res.json(data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error retrieving data');
+    } finally {
+        await client.close();
+    }
+});
+
 // Пути к вашему ключу и сертификату
 const privateKey = fs.readFileSync('../../../etc/letsencrypt/archive/parser.codetime.am/privkey1.pem', 'utf8');
 const certificate = fs.readFileSync('../../../etc/letsencrypt/archive/parser.codetime.am/cert1.pem', 'utf8');
