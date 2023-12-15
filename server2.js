@@ -33,7 +33,13 @@ app.post('/parse-and-save', async (req, res) => {
         const collection = client.db("TestGlide").collection("your_collection_name");
 
         for (const url of urls) {
-            const html = await axios.get(url).then(response => response.data);
+            const html = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 ...',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*!/!*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5'
+                }
+            }).then(response => response.data);
             const $ = cheerio.load(html);
             const titleContent = $('[data-qa="vacancy-title"]').text();
             const salaryContent = $('[data-qa="vacancy-salary-compensation-type-net"]').text();
