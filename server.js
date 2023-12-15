@@ -134,6 +134,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const https = require('https');
 const fs = require('fs');
+const cors = require('cors'); // Импорт пакета CORS
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
@@ -148,8 +149,8 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+app.use(cors(), bodyParser.json());
 
-app.use(bodyParser.json());
 
 app.post('/save-data', async (req, res) => {
     try {
