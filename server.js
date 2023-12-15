@@ -30,9 +30,14 @@ app.post('/save-data', (req, res) => {
                 res.status(500).send('Error reading file');
             }
         } else {
-            // Файл существует, вставляем новую строку таблицы
-            const updatedHtml = insertTableRow(htmlContent, newTableRow);
-            fs.writeFile('data.html', updatedHtml, writeErr => handleError(writeErr, res));
+            // Проверяем, существует ли уже такая ссылка
+            if (htmlContent.includes(data.webSiteLinks)) {
+                res.send('Company already added to the table');
+            } else {
+                // Файл существует, вставляем новую строку таблицы
+                const updatedHtml = insertTableRow(htmlContent, newTableRow);
+                fs.writeFile('data.html', updatedHtml, writeErr => handleError(writeErr, res));
+            }
         }
     });
 });
@@ -60,13 +65,12 @@ function createInitialHtml(tableRow) {
         ${tableRow}
         </tbody>
     </table>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>`;
 }
 
 function insertTableRow(htmlContent, tableRow) {
-    const closingTableTag = '</table>';
+    const closingTableTag = '</tbody></table>';
     const position = htmlContent.lastIndexOf(closingTableTag);
     if (position === -1) {
         throw new Error('Closing table tag not found');
@@ -82,8 +86,6 @@ function handleError(err, res) {
         res.send('Data added to table');
     }
 }
-
-
 
 
 // Создаем HTTPS сервер, используя приложение Express и учетные данные SSL
