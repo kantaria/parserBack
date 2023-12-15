@@ -3,15 +3,43 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const https = require('https'); // Добавляем модуль https
 
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://TestGlide:wChgmoQVw8Uk0ttV@cluster0.nuzhf8j.mongodb.net/?retryWrites=true&w=majority";
+
 const app = express();
 const port = 3000;
 
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
+});
+async function run() {
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        await client.close();
+    }
+}
+run().catch(console.dir);
+// Mongo DB connection finished
 
 // Пути к вашему ключу и сертификату
 const privateKey = fs.readFileSync('../../../etc/letsencrypt/archive/parser.codetime.am/privkey1.pem', 'utf8');
 const certificate = fs.readFileSync('../../../etc/letsencrypt/archive/parser.codetime.am/cert1.pem', 'utf8');
 
 const credentials = { key: privateKey, cert: certificate };
+// Certificate complete
+
 app.use(bodyParser.json());
 
 app.post('/save-data', (req, res) => {
@@ -86,6 +114,8 @@ function handleError(err, res) {
         res.send('Data added to table');
     }
 }
+
+
 
 
 // Создаем HTTPS сервер, используя приложение Express и учетные данные SSL
