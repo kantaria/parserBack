@@ -1,15 +1,20 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const https = require('https');
 const fs = require('fs');
-const cors = require('cors'); // Импорт пакета CORS
+const cors = require('cors');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
 const port = 3000;
 
-// Замените это своими данными MongoDB
-const uri = "mongodb+srv://TestGlide:wChgmoQVw8Uk0ttV@cluster0.nuzhf8j.mongodb.net/?retryWrites=true&w=majority";
+// Конфигурация MongoDB
+const uri = process.env.MONGODB_URI;
+
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -17,30 +22,37 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
 app.use(cors(), bodyParser.json());
 
+app.post('/parse-and-save', async (req, res) => {
+    const urls = req.body.urls; // Получение списка URL-адресов для парсинга
 
-app.post('/save-data', async (req, res) => {
     try {
         await client.connect();
         const collection = client.db("TestGlide").collection("your_collection_name");
 
-        const data = req.body.data;
-        const existingData = await collection.findOne({ webSiteLinks: data.webSiteLinks });
+        for (const url of urls) {
+            const html = await axios.get(url).then(response => response.data);
+            const $ = cheerio.load(html);
+            const titleContent = $('[data-qa="vacancy-title"]').text();
+            const salaryContent = $('[data-qa="vacancy-salary-compensation-type-net"]').text();
 
-        if (existingData) {
-            res.send('Company already added to the database');
-        } else {
-            await collection.insertOne(data);
-            res.send('Data added to the database');
+            if (titleContent && salaryContent) {
+                await collection.insertOne({ url, title: titleContent, salary: salaryContent });
+                console.log(`Данные с ${url} добавлены в базу данных`);
+            }
         }
+
+        res.send('Данные успешно добавлены в базу данных');
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error processing request');
+        res.status(500).send('Ошибка при обработке запроса');
     } finally {
         await client.close();
     }
 });
+
 
 // Маршрут для получения всех данных
 app.get('/get-data', async (req, res) => {
