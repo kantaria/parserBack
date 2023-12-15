@@ -5,6 +5,7 @@ const cors = require('cors');
 const https = require('https');
 const parseAndSaveRoute = require('./routes/parseAndSave');
 const getDataRoute = require('./routes/getData');
+const fs = require('fs');
 
 const app = express();
 const port = 3000;
